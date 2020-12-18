@@ -28,7 +28,7 @@ def terminate():
 def start_screen():
     intro_text = ["ПРАВИЛА", "",
                   "Герой двигается",
-                  "Карта на месте"]
+                  "Карта тоже"]
 
     fon = pygame.transform.scale(load_image('fon.jpg'), (width, height))
     screen.blit(fon, (0, 0))
@@ -68,7 +68,7 @@ def load_level(filename):
     max_width = max(map(len, level_map))
 
     # дополняем каждую строку пустыми клетками ('.')
-    return list(map(lambda x: x.ljust(10, '.'), level_map))
+    return list(map(lambda x: x.ljust(max_width, '.'), level_map))
 
 
 tile_images = {
@@ -108,10 +108,30 @@ class Player(pygame.sprite.Sprite):
         else:
             return
         self.rect = self.rect.move(x, y)
+        if not pygame.sprite.spritecollide(self, tiles_group, dokill=False):
+            self.rect = self.rect.move(-x, -y)
+            return
         for i in pygame.sprite.spritecollide(self, tiles_group, dokill=False):
             if i.type == 'wall':
                 self.rect = self.rect.move(-x, -y)
-                break
+                return
+
+
+class Camera:
+    # зададим начальный сдвиг камеры
+    def __init__(self):
+        self.dx = 0
+        self.dy = 0
+
+    # сдвинуть объект obj на смещение камеры
+    def apply(self, obj):
+        obj.rect.x += self.dx
+        obj.rect.y += self.dy
+
+    # позиционировать камеру на объекте target
+    def update(self, target):
+        self.dx = -(target.rect.x + target.rect.w // 2 - width // 2)
+        self.dy = -(target.rect.y + target.rect.h // 2 - height // 2)
 
 
 # основной персонаж
@@ -145,6 +165,7 @@ if __name__ == '__main__':
     size = width, height = 500, 500
     screen = pygame.display.set_mode(size)
     clock = pygame.time.Clock()
+    camera = Camera()
     player, level_x, level_y = generate_level(load_level(level))
     start_screen()
     while True:
@@ -163,6 +184,11 @@ if __name__ == '__main__':
                 else:
                     key = None
                 player.update(key)
+        # изменяем ракурс камеры
+        camera.update(player);
+        # обновляем положение всех спрайтов
+        for sprite in all_sprites:
+            camera.apply(sprite)
         screen.fill(pygame.Color('black'))
         all_sprites.draw(screen)
         player_group.draw(screen)
