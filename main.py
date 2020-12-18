@@ -10,6 +10,7 @@ down = 1
 left = 2
 right = 3
 
+
 def load_image(name):
     fullname = os.path.join('data', name)
     if not os.path.isfile(fullname):
@@ -56,14 +57,18 @@ def start_screen():
 def load_level(filename):
     filename = "data/" + filename
     # читаем уровень, убирая символы перевода строки
-    with open(filename, 'r') as mapFile:
-        level_map = [line.strip() for line in mapFile]
+    try:
+        with open(filename, 'r') as mapFile:
+            level_map = [line.strip() for line in mapFile]
+    except:
+        print(f"Файл с уровнем '{filename}' не найден")
+        exit()
 
     # и подсчитываем максимальную длину
     max_width = max(map(len, level_map))
 
     # дополняем каждую строку пустыми клетками ('.')
-    return list(map(lambda x: x.ljust(max_width, '.'), level_map))
+    return list(map(lambda x: x.ljust(10, '.'), level_map))
 
 
 tile_images = {
@@ -134,13 +139,14 @@ def generate_level(level):
 
 
 if __name__ == '__main__':
+    level = input()
     pygame.init()
     pygame.display.set_caption('Перемещение героя')
     size = width, height = 500, 500
     screen = pygame.display.set_mode(size)
     clock = pygame.time.Clock()
+    player, level_x, level_y = generate_level(load_level(level))
     start_screen()
-    player, level_x, level_y = generate_level(load_level('lvl1.txt'))
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
