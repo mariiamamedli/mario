@@ -127,6 +127,14 @@ class Camera:
     def apply(self, obj):
         obj.rect.x += self.dx
         obj.rect.y += self.dy
+        if obj.rect.x < 0:
+            obj.rect.x += 8 * tile_width
+        elif obj.rect.x + tile_width > width:
+            obj.rect.x -= 8 * tile_width
+        if obj.rect.y < 0:
+            obj.rect.y += 8 * tile_height
+        elif obj.rect.y + tile_height > height:
+            obj.rect.y -= 8 * tile_height
 
     # позиционировать камеру на объекте target
     def update(self, target):
@@ -159,7 +167,7 @@ def generate_level(level):
 
 
 if __name__ == '__main__':
-    level = input()
+    level = 'lvl0.txt'  # input()
     pygame.init()
     pygame.display.set_caption('Перемещение героя')
     size = width, height = 500, 500
@@ -167,6 +175,7 @@ if __name__ == '__main__':
     clock = pygame.time.Clock()
     camera = Camera()
     player, level_x, level_y = generate_level(load_level(level))
+    key = 0
     start_screen()
     while True:
         for event in pygame.event.get():
@@ -184,12 +193,18 @@ if __name__ == '__main__':
                 else:
                     key = None
                 player.update(key)
-        # изменяем ракурс камеры
-        camera.update(player);
-        # обновляем положение всех спрайтов
-        for sprite in all_sprites:
-            camera.apply(sprite)
-        screen.fill(pygame.Color('black'))
-        all_sprites.draw(screen)
-        player_group.draw(screen)
-        pygame.display.flip()
+        if key is not None:
+            # изменяем ракурс камеры
+            camera.update(player);
+            # обновляем положение всех спрайтов
+            for sprite in all_sprites:
+                camera.apply(sprite)
+            screen.fill(pygame.Color('black'))
+            all_sprites.draw(screen)
+            player_group.draw(screen)
+            pygame.draw.rect(screen, pygame.Color('black'), (0, 0, width, int(height * 0.15)))
+            pygame.draw.rect(screen, pygame.Color('black'), (0, height - int(height * 0.15), width, int(height * 0.15)))
+            pygame.draw.rect(screen, pygame.Color('black'), (0, 0, int(width * 0.15), height))
+            pygame.draw.rect(screen, pygame.Color('black'), (width - int(width * 0.15), 0, int(width * 0.15), height))
+            pygame.display.flip()
+        key = None
